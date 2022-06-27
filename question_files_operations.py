@@ -17,7 +17,7 @@ def convert_quiz_files_to_dict(folder):
                     header, value = text_string.split(sep=':\n', maxsplit=1)
                     if 'Вопрос' in header:
                         count += 1
-                        quiz_content[count]['question'] = value
+                        quiz_content[str(count)]['question'] = value
                     elif 'Ответ' in header:
-                        quiz_content[count]['answer'] = value
+                        quiz_content[str(count)]['answer'] = value
     return quiz_content
