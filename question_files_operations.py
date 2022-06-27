@@ -21,9 +21,3 @@ def convert_quiz_files_to_dict(folder):
                     elif 'Ответ' in header:
                         quiz_content[count]['answer'] = value
     return quiz_content
-
-
-if __name__ == '__main__':
-    questions_folder = os.path.normpath(
-        '/home/drew/Documents/GitHub/history_quiz/quiz_questions/')
-    print(len(convert_quiz_files_to_dict(questions_folder)))
