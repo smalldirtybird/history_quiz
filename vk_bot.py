@@ -56,8 +56,8 @@ def handle_solution_attempt(event, api):
         api.messages.send(
             user_id=chat_id,
             message='''Правильно! Поздравляю!
-                                 Для следующего вопроса нажми «Новый вопрос»”
-                                 ''',
+                       Для следующего вопроса нажми «Новый вопрос»”
+                       ''',
             random_id=get_random_id()
         )
     else:
