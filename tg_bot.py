@@ -3,9 +3,11 @@ import os
 
 import redis
 from dotenv import load_dotenv
-from telegram import ReplyKeyboardMarkup, Bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler
-from quiz_question_operations import get_new_question, get_correct_answer
+from telegram import Bot, ReplyKeyboardMarkup
+from telegram.ext import (CommandHandler, ConversationHandler, Filters,
+                          MessageHandler, RegexHandler, Updater)
+
+from quiz_question_operations import get_correct_answer, get_new_question
 
 WAITING, QUESTION_ASKED = range(2)
 
@@ -29,10 +31,12 @@ def handle_new_question_request(bot, update):
 def handle_solution_attempt(bot, update):
     chat_id = update['message']['chat']['id']
     correct_answer = get_correct_answer(chat_id, redis_connection)
-    print(correct_answer)
     if update.message.text == correct_answer:
         bot.send_message(chat_id=update['message']['chat']['id'],
-                         text='Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»”')
+                         text='''Правильно! Поздравляю!
+                                 Для следующего вопроса нажми «Новый вопрос»”
+                                 '''
+                         )
         return WAITING
     else:
         update.message.reply_text('Неправильно… Попробуешь ещё раз?')
@@ -71,9 +75,11 @@ if __name__ == '__main__':
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            WAITING: [RegexHandler('^Новый вопрос$', handle_new_question_request)],
+            WAITING: [RegexHandler('^Новый вопрос$',
+                                   handle_new_question_request)],
             QUESTION_ASKED: [RegexHandler('^Сдаться$', handle_retreat),
-                             MessageHandler(Filters.text, handle_solution_attempt)
+                             MessageHandler(
+                                 Filters.text, handle_solution_attempt)
                              ]
             },
         fallbacks=[RegexHandler('^Done$', done)]

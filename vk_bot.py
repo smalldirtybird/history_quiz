@@ -5,11 +5,12 @@ import traceback
 import redis
 import vk_api
 from dotenv import load_dotenv
-from quiz_question_operations import get_new_question, get_correct_answer
 from telegram import Bot
-from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from vk_api.longpoll import VkEventType, VkLongPoll
 from vk_api.utils import get_random_id
+
+from quiz_question_operations import get_correct_answer, get_new_question
 
 
 class TelegramLogsHandler(logging.Handler):
@@ -51,11 +52,12 @@ def handle_new_question_request(event, api):
 def handle_solution_attempt(event, api):
     chat_id = event.user_id
     correct_answer = get_correct_answer(chat_id, redis_connection)
-    print(correct_answer)
     if event.text == correct_answer:
         api.messages.send(
             user_id=chat_id,
-            message='Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»”',
+            message='''Правильно! Поздравляю!
+                                 Для следующего вопроса нажми «Новый вопрос»”
+                                 ''',
             random_id=get_random_id()
         )
     else:

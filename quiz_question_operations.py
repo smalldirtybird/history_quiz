@@ -16,7 +16,6 @@ def convert_quiz_files_to_dict():
             text_strings = questions_text.split('\n\n')
             for text_string in text_strings:
                 if ':\n' in text_string:
-                    # print(question_filepath, '\n', text_string)
                     header, value = text_string.split(sep=':\n', maxsplit=1)
                     if 'Вопрос' in header:
                         count += 1
@@ -31,7 +30,6 @@ def get_new_question(database_id, connection):
     question_number = str(random.randint(1, len(quiz_questions)))
     quiz_question = quiz_questions[question_number]['question']
     connection.set(database_id, question_number)
-    print(quiz_questions[question_number]['answer'])
     return quiz_question
 
 
