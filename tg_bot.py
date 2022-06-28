@@ -1,30 +1,13 @@
 import logging
 import os
-import random
-import re
 
 import redis
 from dotenv import load_dotenv
 from telegram import ReplyKeyboardMarkup, Bot
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, RegexHandler
-from question_files_operations import convert_quiz_files_to_dict
+from quiz_question_operations import get_new_question, get_correct_answer
 
 WAITING, QUESTION_ASKED = range(2)
-
-
-def get_new_question(database_id):
-    question_number = str(random.randint(1, len(quiz_questions)))
-    quiz_question = quiz_questions[question_number]['question']
-    redis_connection.set(database_id, question_number)
-    print(quiz_questions[question_number]['answer'])
-    return quiz_question
-
-
-def get_correct_answer(database_id):
-    question_number = redis_connection.get(database_id).decode('UTF-8')
-    correct_answer = quiz_questions[question_number]['answer']
-    answer, explanation = re.split('\.| \(', correct_answer, maxsplit=1)
-    return answer
 
 
 def start(bot, update):
@@ -38,14 +21,14 @@ def start(bot, update):
 
 def handle_new_question_request(bot, update):
     chat_id = update['message']['chat']['id']
-    quiz_question = get_new_question(chat_id)
+    quiz_question = get_new_question(chat_id, redis_connection)
     update.message.reply_text(quiz_question)
     return QUESTION_ASKED
 
 
 def handle_solution_attempt(bot, update):
     chat_id = update['message']['chat']['id']
-    correct_answer = get_correct_answer(chat_id)
+    correct_answer = get_correct_answer(chat_id, redis_connection)
     print(correct_answer)
     if update.message.text == correct_answer:
         bot.send_message(chat_id=update['message']['chat']['id'],
@@ -58,10 +41,10 @@ def handle_solution_attempt(bot, update):
 
 def handle_retreat(bot, update):
     chat_id = update['message']['chat']['id']
-    correct_answer = get_correct_answer(chat_id)
+    correct_answer = get_correct_answer(chat_id, redis_connection)
     bot.send_message(chat_id=update['message']['chat']['id'],
                      text=f'Правильный ответ:\n{correct_answer}')
-    new_quiz_question = get_new_question(chat_id)
+    new_quiz_question = get_new_question(chat_id, redis_connection)
     update.message.reply_text(f'Новый вопрос:\n{new_quiz_question}')
     return QUESTION_ASKED
 
@@ -83,7 +66,6 @@ if __name__ == '__main__':
         port=os.environ['DB_PORT'],
         password=os.environ['DB_PASSWORD']
         )
-    quiz_questions = convert_quiz_files_to_dict('/home/drew/Documents/quiz_questions/')
     updater = Updater(os.environ['TELEGRAM_BOT_TOKEN'])
     dp = updater.dispatcher
     conv_handler = ConversationHandler(

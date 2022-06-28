@@ -1,8 +1,11 @@
 import os
+import random
+import re
 from collections import defaultdict
 
 
-def convert_quiz_files_to_dict(folder):
+def convert_quiz_files_to_dict():
+    folder = os.environ['QUIZ_FILES_PATH']
     question_files = os.listdir(folder)
     quiz_content = defaultdict(dict)
     count = 0
@@ -21,3 +24,20 @@ def convert_quiz_files_to_dict(folder):
                     elif 'Ответ' in header:
                         quiz_content[str(count)]['answer'] = value
     return quiz_content
+
+
+def get_new_question(database_id, connection):
+    quiz_questions = convert_quiz_files_to_dict()
+    question_number = str(random.randint(1, len(quiz_questions)))
+    quiz_question = quiz_questions[question_number]['question']
+    connection.set(database_id, question_number)
+    print(quiz_questions[question_number]['answer'])
+    return quiz_question
+
+
+def get_correct_answer(database_id, connection):
+    quiz_questions = convert_quiz_files_to_dict()
+    question_number = connection.get(database_id).decode('UTF-8')
+    correct_answer = quiz_questions[question_number]['answer']
+    answer, explanation = re.split('\.| \(', correct_answer, maxsplit=1)
+    return answer
