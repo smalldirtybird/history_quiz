@@ -12,6 +12,21 @@ from question_files_operations import convert_quiz_files_to_dict
 WAITING, QUESTION_ASKED = range(2)
 
 
+def get_new_question(database_id):
+    question_number = str(random.randint(1, len(quiz_questions)))
+    quiz_question = quiz_questions[question_number]['question']
+    redis_connection.set(database_id, question_number)
+    print(quiz_questions[question_number]['answer'])
+    return quiz_question
+
+
+def get_correct_answer(database_id):
+    question_number = redis_connection.get(database_id).decode('UTF-8')
+    correct_answer = quiz_questions[question_number]['answer']
+    answer, explanation = re.split('\.| \(', correct_answer, maxsplit=1)
+    return answer
+
+
 def start(bot, update):
     quiz_keyboard = [['Новый вопрос', 'Сдаться'], ['Мой счёт']]
     reply_markup = ReplyKeyboardMarkup(quiz_keyboard)
@@ -23,22 +38,16 @@ def start(bot, update):
 
 def handle_new_question_request(bot, update):
     chat_id = update['message']['chat']['id']
-    question_number = str(random.randint(1, len(quiz_questions)))
-    quiz_question = quiz_questions[question_number]['question']
-    redis_connection.set(chat_id, question_number)
+    quiz_question = get_new_question(chat_id)
     update.message.reply_text(quiz_question)
-    print(quiz_questions[question_number]['answer'])
     return QUESTION_ASKED
 
 
 def handle_solution_attempt(bot, update):
     chat_id = update['message']['chat']['id']
-    question_number = redis_connection.get(chat_id).decode('UTF-8')
-    correct_answer = quiz_questions[question_number]['answer']
-    answer, explanation = re.split('\.| \(', correct_answer, maxsplit=1)
-    print(answer)
-    print(explanation)
-    if update.message.text == answer:
+    correct_answer = get_correct_answer(chat_id)
+    print(correct_answer)
+    if update.message.text == correct_answer:
         bot.send_message(chat_id=update['message']['chat']['id'],
                          text='Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»”')
         return WAITING
@@ -49,16 +58,11 @@ def handle_solution_attempt(bot, update):
 
 def handle_retreat(bot, update):
     chat_id = update['message']['chat']['id']
-    question_number = redis_connection.get(chat_id).decode('UTF-8')
-    correct_answer = quiz_questions[question_number]['answer']
-    answer, explanation = re.split('\.| \(', correct_answer, maxsplit=1)
+    correct_answer = get_correct_answer(chat_id)
     bot.send_message(chat_id=update['message']['chat']['id'],
-                     text=f'Правильный ответ:\n{answer}')
-    new_question_number = str(random.randint(1, len(quiz_questions)))
-    new_quiz_question = quiz_questions[new_question_number]['question']
-    redis_connection.set(chat_id, new_question_number)
+                     text=f'Правильный ответ:\n{correct_answer}')
+    new_quiz_question = get_new_question(chat_id)
     update.message.reply_text(f'Новый вопрос:\n{new_quiz_question}')
-    print(quiz_questions[new_question_number]['answer'])
     return QUESTION_ASKED
 
 
