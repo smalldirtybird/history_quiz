@@ -116,5 +116,3 @@ dmypy.json
 .idea/
 .idea
 Procfile.bak
-./quiz_questions
-./quiz_questions/
