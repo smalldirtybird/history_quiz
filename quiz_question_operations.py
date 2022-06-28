@@ -39,5 +39,8 @@ def get_correct_answer(database_id, connection):
     quiz_questions = convert_quiz_files_to_dict()
     question_number = connection.get(database_id).decode('UTF-8')
     correct_answer = quiz_questions[question_number]['answer']
-    answer, explanation = re.split('\.| \(', correct_answer, maxsplit=1)
-    return answer
+    if '.' in correct_answer or '(' in correct_answer:
+        answer, explanation = re.split('\.| \(', correct_answer, maxsplit=1)
+        return answer
+    else:
+        return correct_answer
