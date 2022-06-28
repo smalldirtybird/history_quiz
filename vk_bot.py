@@ -1,10 +1,11 @@
 import logging
 import os
-import random
 import traceback
 
+import redis
 import vk_api
 from dotenv import load_dotenv
+from quiz_question_operations import get_new_question, get_correct_answer
 from telegram import Bot
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
@@ -37,21 +38,62 @@ def send_keybord_to_chat(event, api):
     )
 
 
-def echo(event, api):
+def handle_new_question_request(event, api):
+    chat_id = event.user_id
+    quiz_question = get_new_question(chat_id, redis_connection)
     api.messages.send(
-        user_id=event.user_id,
-        message=event.text,
-        random_id=random.randint(1, 1000)
+        user_id=chat_id,
+        message=quiz_question,
+        random_id=get_random_id()
+    )
+
+
+def handle_solution_attempt(event, api):
+    chat_id = event.user_id
+    correct_answer = get_correct_answer(chat_id, redis_connection)
+    print(correct_answer)
+    if event.text == correct_answer:
+        api.messages.send(
+            user_id=chat_id,
+            message='Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»”',
+            random_id=get_random_id()
+        )
+    else:
+        api.messages.send(
+            user_id=chat_id,
+            message='Неправильно… Попробуешь ещё раз?',
+            random_id=get_random_id()
+        )
+
+
+def handle_retreat(event, api):
+    chat_id = event.user_id
+    correct_answer = get_correct_answer(chat_id, redis_connection)
+    api.messages.send(
+        user_id=chat_id,
+        message=f'Правильный ответ:\n{correct_answer}',
+        random_id=get_random_id()
+    )
+    new_quiz_question = get_new_question(chat_id, redis_connection)
+    api.messages.send(
+        user_id=chat_id,
+        message=f'Новый вопрос:\n{new_quiz_question}',
+        random_id=get_random_id()
     )
 
 
 if __name__ == "__main__":
     logging.basicConfig(
-        # filename='vk_bot.log',
+        filename='vk_bot.log',
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         level=logging.ERROR
         )
     load_dotenv()
+    redis_connection = redis.Redis(
+        host=os.environ['DB_HOST'],
+        port=os.environ['DB_PORT'],
+        password=os.environ['DB_PASSWORD']
+    )
     vk_session = vk_api.VkApi(token=os.environ['VK_GROUP_TOKEN'])
     vk = vk_session.get_api()
     longpoll = VkLongPoll(vk_session)
@@ -64,9 +106,13 @@ if __name__ == "__main__":
                 if vk_event.type == VkEventType.MESSAGE_NEW and vk_event.to_me:
                     if vk_event.text == 'start':
                         send_keybord_to_chat(vk_event, vk)
+                    elif vk_event.text == 'Новый вопрос':
+                        handle_new_question_request(vk_event, vk)
+                    elif vk_event.text == 'Сдаться':
+                        handle_retreat(vk_event, vk)
                     else:
-                        echo(vk_event, vk)
+                        handle_solution_attempt(vk_event, vk)
         except Exception as error:
             logging.error(traceback.format_exc())
-            # logger.error(
-            #     f'VK bot crushed with exception:\n{traceback.format_exc()}')
+            logger.error(
+                f'VK bot crushed with exception:\n{traceback.format_exc()}')
