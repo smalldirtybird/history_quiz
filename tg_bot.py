@@ -1,5 +1,6 @@
 import logging
 import os
+from textwrap import dedent
 
 import redis
 from dotenv import load_dotenv
@@ -33,9 +34,11 @@ def handle_solution_attempt(bot, update):
     correct_answer = get_correct_answer(chat_id, redis_connection)
     if update.message.text == correct_answer:
         bot.send_message(chat_id=update['message']['chat']['id'],
-                         text='''Правильно! Поздравляю!
-                                 Для следующего вопроса нажми «Новый вопрос»”
-                                 '''
+                         text=dedent(
+                             '''
+                             Правильно! Поздравляю!
+                             Для следующего вопроса нажми «Новый вопрос»”
+                             ''')
                          )
         return WAITING
     else:

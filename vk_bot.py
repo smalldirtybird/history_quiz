@@ -106,7 +106,7 @@ if __name__ == "__main__":
         try:
             for vk_event in longpoll.listen():
                 if vk_event.type == VkEventType.MESSAGE_NEW and vk_event.to_me:
-                    if vk_event.text == 'start':
+                    if vk_event.text == '/start':
                         send_keybord_to_chat(vk_event, vk)
                     elif vk_event.text == 'Новый вопрос':
                         handle_new_question_request(vk_event, vk)
