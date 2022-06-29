@@ -24,14 +24,16 @@ def start(bot, update):
 
 def handle_new_question_request(bot, update):
     chat_id = update['message']['chat']['id']
-    quiz_question = get_new_question(chat_id, redis_connection)
+    db_user_id = f'user_tg_{chat_id}'
+    quiz_question = get_new_question(db_user_id, redis_connection)
     update.message.reply_text(quiz_question)
     return QUESTION_ASKED
 
 
 def handle_solution_attempt(bot, update):
     chat_id = update['message']['chat']['id']
-    correct_answer = get_correct_answer(chat_id, redis_connection)
+    db_user_id = f'user_tg_{chat_id}'
+    correct_answer = get_correct_answer(db_user_id, redis_connection)
     if update.message.text == correct_answer:
         bot.send_message(chat_id=update['message']['chat']['id'],
                          text=dedent(
@@ -48,10 +50,11 @@ def handle_solution_attempt(bot, update):
 
 def handle_retreat(bot, update):
     chat_id = update['message']['chat']['id']
-    correct_answer = get_correct_answer(chat_id, redis_connection)
+    db_user_id = f'user_tg_{chat_id}'
+    correct_answer = get_correct_answer(db_user_id, redis_connection)
     bot.send_message(chat_id=update['message']['chat']['id'],
                      text=f'Правильный ответ:\n{correct_answer}')
-    new_quiz_question = get_new_question(chat_id, redis_connection)
+    new_quiz_question = get_new_question(db_user_id, redis_connection)
     update.message.reply_text(f'Новый вопрос:\n{new_quiz_question}')
     return QUESTION_ASKED
 

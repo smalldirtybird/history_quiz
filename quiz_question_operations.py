@@ -1,6 +1,6 @@
+import json
 import os
 import random
-import re
 from collections import defaultdict
 
 
@@ -25,20 +25,19 @@ def convert_quiz_files_to_dict():
     return quiz_content
 
 
-def get_new_question(database_id, connection):
-    quiz_questions = convert_quiz_files_to_dict()
-    question_number = str(random.randint(1, len(quiz_questions)))
-    quiz_question = quiz_questions[question_number]['question']
-    connection.set(database_id, question_number)
+def get_new_question(db_user_id, connection):
+    question_number = str(random.randint(
+        1, len(connection.keys('question_*'))))
+    question_id = f'question_{question_number}'
+    db_user_info = json.dumps({'last_asked_question': question_id})
+    connection.set(db_user_id, db_user_info)
+    quiz_question = json.loads(connection.get(question_id))['question']
     return quiz_question
 
 
-def get_correct_answer(database_id, connection):
-    quiz_questions = convert_quiz_files_to_dict()
-    question_number = connection.get(database_id).decode('UTF-8')
-    correct_answer = quiz_questions[question_number]['answer']
-    if '.' in correct_answer or '(' in correct_answer:
-        answer, explanation = re.split('\.| \(', correct_answer, maxsplit=1)
-        return answer
-    else:
-        return correct_answer
+def get_correct_answer(db_user_id, connection):
+    db_user_info = json.loads(connection.get(db_user_id).decode('UTF-8'))
+    question_id = db_user_info['last_asked_question']
+    question_content = json.loads(connection.get(question_id).decode('UTF-8'))
+    correct_answer = question_content['answer']
+    return correct_answer

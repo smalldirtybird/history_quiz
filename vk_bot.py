@@ -41,7 +41,8 @@ def send_keybord_to_chat(event, api):
 
 def handle_new_question_request(event, api):
     chat_id = event.user_id
-    quiz_question = get_new_question(chat_id, redis_connection)
+    db_user_id = f'user_vk_{chat_id}'
+    quiz_question = get_new_question(db_user_id, redis_connection)
     api.messages.send(
         user_id=chat_id,
         message=quiz_question,
@@ -51,7 +52,8 @@ def handle_new_question_request(event, api):
 
 def handle_solution_attempt(event, api):
     chat_id = event.user_id
-    correct_answer = get_correct_answer(chat_id, redis_connection)
+    db_user_id = f'user_vk_{chat_id}'
+    correct_answer = get_correct_answer(db_user_id, redis_connection)
     if event.text == correct_answer:
         api.messages.send(
             user_id=chat_id,
@@ -70,13 +72,14 @@ def handle_solution_attempt(event, api):
 
 def handle_retreat(event, api):
     chat_id = event.user_id
-    correct_answer = get_correct_answer(chat_id, redis_connection)
+    db_user_id = f'user_vk_{chat_id}'
+    correct_answer = get_correct_answer(db_user_id, redis_connection)
     api.messages.send(
         user_id=chat_id,
         message=f'Правильный ответ:\n{correct_answer}',
         random_id=get_random_id()
     )
-    new_quiz_question = get_new_question(chat_id, redis_connection)
+    new_quiz_question = get_new_question(db_user_id, redis_connection)
     api.messages.send(
         user_id=chat_id,
         message=f'Новый вопрос:\n{new_quiz_question}',
