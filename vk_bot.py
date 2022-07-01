@@ -1,6 +1,5 @@
 import logging
 import os
-import traceback
 
 import redis
 import vk_api
@@ -43,12 +42,12 @@ def send_keyboard_to_chat(event, api):
     )
 
 
-def handle_new_question_request(event, api):
+def handle_new_question_request(event, api, connection, content):
     chat_id = event.user_id
     save_new_question_content_to_database(
-        chat_id, redis_connection, quiz_content)
+        chat_id, connection, content)
     new_quiz_question = get_question_content_from_database(
-        chat_id, redis_connection)['question']
+        chat_id, connection)['question']
     api.messages.send(
         user_id=chat_id,
         message=new_quiz_question,
@@ -56,10 +55,10 @@ def handle_new_question_request(event, api):
     )
 
 
-def handle_solution_attempt(event, api):
+def handle_solution_attempt(event, api, connection):
     chat_id = event.user_id
     correct_answer = get_question_content_from_database(
-        chat_id, redis_connection)['answer']
+        chat_id, connection)['answer']
     if event.text == correct_answer:
         api.messages.send(
             user_id=chat_id,
@@ -76,19 +75,19 @@ def handle_solution_attempt(event, api):
         )
 
 
-def handle_retreat(event, api):
+def handle_retreat(event, api, connection, content):
     chat_id = event.user_id
     correct_answer = get_question_content_from_database(
-        chat_id, redis_connection)['answer']
+        chat_id, connection)['answer']
     api.messages.send(
         user_id=chat_id,
         message=f'Правильный ответ:\n{correct_answer}',
         random_id=get_random_id()
     )
     save_new_question_content_to_database(
-        chat_id, redis_connection, quiz_content)
+        chat_id, connection, content)
     new_quiz_question = get_question_content_from_database(
-        chat_id, redis_connection)['question']
+        chat_id, connection)['question']
     api.messages.send(
         user_id=chat_id,
         message=f'Новый вопрос:\n{new_quiz_question}',
@@ -96,7 +95,7 @@ def handle_retreat(event, api):
     )
 
 
-if __name__ == "__main__":
+def main():
     logging.basicConfig(
         filename='vk_bot.log',
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -121,11 +120,17 @@ if __name__ == "__main__":
                     if vk_event.text == '/start':
                         send_keyboard_to_chat(vk_event, vk)
                     elif vk_event.text == 'Новый вопрос':
-                        handle_new_question_request(vk_event, vk)
+                        handle_new_question_request(
+                            vk_event, vk, redis_connection, quiz_content)
                     elif vk_event.text == 'Сдаться':
-                        handle_retreat(vk_event, vk)
+                        handle_retreat(
+                            vk_event, vk, redis_connection, quiz_content)
                     else:
-                        handle_solution_attempt(vk_event, vk)
+                        handle_solution_attempt(vk_event, vk, redis_connection)
         except Exception as error:
             logger.exception(
                 f'VK bot crushed with exception:')
+
+
+if __name__ == "__main__":
+    main()
