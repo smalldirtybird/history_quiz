@@ -14,6 +14,8 @@ from quiz_question_operations import (convert_quiz_files_to_dict,
                                       get_question_content_from_database,
                                       save_new_question_content_to_database)
 
+logger = logging.getLogger('TelegramLogger')
+
 
 class TelegramLogsHandler(logging.Handler):
 
@@ -101,6 +103,8 @@ if __name__ == "__main__":
         level=logging.ERROR
         )
     load_dotenv()
+    logger.addHandler(TelegramLogsHandler(
+        os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID']))
     quiz_content = convert_quiz_files_to_dict()
     redis_connection = redis.Redis(
         host=os.environ['DB_HOST'],
@@ -110,9 +114,6 @@ if __name__ == "__main__":
     vk_session = vk_api.VkApi(token=os.environ['VK_GROUP_TOKEN'])
     vk = vk_session.get_api()
     longpoll = VkLongPoll(vk_session)
-    logger = logging.getLogger('TelegramLogger')
-    logger.addHandler(TelegramLogsHandler(
-        os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID']))
     while True:
         try:
             for vk_event in longpoll.listen():
