@@ -1,4 +1,3 @@
-import logging
 import os
 from functools import partial
 from textwrap import dedent
@@ -73,11 +72,6 @@ def done(bot, update):
 
 
 def main():
-    logging.basicConfig(
-        filename='tg_bot.log',
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=logging.ERROR
-    )
     load_dotenv()
     quiz_content = convert_quiz_files_to_dict()
     redis_connection = redis.Redis(
