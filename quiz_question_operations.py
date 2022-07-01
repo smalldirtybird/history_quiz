@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import re
@@ -23,22 +24,14 @@ def convert_quiz_files_to_dict():
     return quiz_content
 
 
-def get_new_question(user_id, connection, content):
+def save_new_question_content_to_database(user_id, connection, content):
     question, answer = random.choice(list(content.items()))
-    connection.set(user_id, answer)
-    print(answer)
-    return question
+    if '.' in answer or '(' in answer:
+        answer, explanation = re.split(
+            '\.| \(', answer, maxsplit=1)
+    question_content = {'question': question, 'answer': answer}
+    connection.set(user_id, json.dumps(question_content))
 
 
-def get_correct_answer(user_id, connection):
-    correct_answer = connection.get(user_id).decode('UTF-8')
-    if '.' in correct_answer or '(' in correct_answer:
-        correct_answer, explanation = re.split(
-            '\.| \(', correct_answer, maxsplit=1)
-    return correct_answer
-
-
-if __name__ == '__main__':
-    from dotenv import load_dotenv
-    load_dotenv()
-    print(type(convert_quiz_files_to_dict().items()))
+def get_question_content_from_database(user_id, connection):
+    return json.loads(connection.get(user_id))

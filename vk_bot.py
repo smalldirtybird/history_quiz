@@ -10,7 +10,9 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkEventType, VkLongPoll
 from vk_api.utils import get_random_id
 
-from quiz_question_operations import convert_quiz_files_to_dict, get_correct_answer, get_new_question
+from quiz_question_operations import (convert_quiz_files_to_dict,
+                                      get_question_content_from_database,
+                                      save_new_question_content_to_database)
 
 
 class TelegramLogsHandler(logging.Handler):
@@ -41,17 +43,21 @@ def send_keybord_to_chat(event, api):
 
 def handle_new_question_request(event, api):
     chat_id = event.user_id
-    quiz_question = get_new_question(chat_id, redis_connection, quiz_content)
+    save_new_question_content_to_database(
+        chat_id, redis_connection, quiz_content)
+    new_quiz_question = get_question_content_from_database(
+        chat_id, redis_connection)['question']
     api.messages.send(
         user_id=chat_id,
-        message=quiz_question,
+        message=new_quiz_question,
         random_id=get_random_id()
     )
 
 
 def handle_solution_attempt(event, api):
     chat_id = event.user_id
-    correct_answer = get_correct_answer(chat_id, redis_connection)
+    correct_answer = get_question_content_from_database(
+        chat_id, redis_connection)['answer']
     if event.text == correct_answer:
         api.messages.send(
             user_id=chat_id,
@@ -70,13 +76,17 @@ def handle_solution_attempt(event, api):
 
 def handle_retreat(event, api):
     chat_id = event.user_id
-    correct_answer = get_correct_answer(chat_id, redis_connection)
+    correct_answer = get_question_content_from_database(
+        chat_id, redis_connection)['answer']
     api.messages.send(
         user_id=chat_id,
         message=f'Правильный ответ:\n{correct_answer}',
         random_id=get_random_id()
     )
-    new_quiz_question = get_new_question(chat_id, redis_connection, quiz_content)
+    save_new_question_content_to_database(
+        chat_id, redis_connection, quiz_content)
+    new_quiz_question = get_question_content_from_database(
+        chat_id, redis_connection)['question']
     api.messages.send(
         user_id=chat_id,
         message=f'Новый вопрос:\n{new_quiz_question}',

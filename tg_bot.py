@@ -4,11 +4,13 @@ from textwrap import dedent
 
 import redis
 from dotenv import load_dotenv
-from telegram import Bot, ReplyKeyboardMarkup
+from telegram import ReplyKeyboardMarkup
 from telegram.ext import (CommandHandler, ConversationHandler, Filters,
                           MessageHandler, RegexHandler, Updater)
 
-from quiz_question_operations import convert_quiz_files_to_dict, get_correct_answer, get_new_question
+from quiz_question_operations import (convert_quiz_files_to_dict,
+                                      get_question_content_from_database,
+                                      save_new_question_content_to_database)
 
 WAITING, QUESTION_ASKED = range(2)
 
@@ -24,14 +26,18 @@ def start(bot, update):
 
 def handle_new_question_request(bot, update):
     chat_id = update['message']['chat']['id']
-    quiz_question = get_new_question(chat_id, redis_connection, quiz_content)
-    update.message.reply_text(quiz_question)
+    save_new_question_content_to_database(
+        chat_id, redis_connection, quiz_content)
+    new_quiz_question = get_question_content_from_database(
+        chat_id, redis_connection)['question']
+    update.message.reply_text(new_quiz_question)
     return QUESTION_ASKED
 
 
 def handle_solution_attempt(bot, update):
     chat_id = update['message']['chat']['id']
-    correct_answer = get_correct_answer(chat_id, redis_connection)
+    correct_answer = get_question_content_from_database(
+        chat_id, redis_connection)['answer']
     if update.message.text == correct_answer:
         bot.send_message(chat_id=update['message']['chat']['id'],
                          text=dedent(
@@ -48,10 +54,14 @@ def handle_solution_attempt(bot, update):
 
 def handle_retreat(bot, update):
     chat_id = update['message']['chat']['id']
-    correct_answer = get_correct_answer(chat_id, redis_connection)
+    correct_answer = get_question_content_from_database(
+        chat_id, redis_connection)['answer']
     bot.send_message(chat_id=update['message']['chat']['id'],
                      text=f'Правильный ответ:\n{correct_answer}')
-    new_quiz_question = get_new_question(chat_id, redis_connection, quiz_content)
+    save_new_question_content_to_database(
+        chat_id, redis_connection, quiz_content)
+    new_quiz_question = get_question_content_from_database(
+        chat_id, redis_connection)['question']
     update.message.reply_text(f'Новый вопрос:\n{new_quiz_question}')
     return QUESTION_ASKED
 
