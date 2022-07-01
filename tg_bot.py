@@ -8,7 +8,7 @@ from telegram import Bot, ReplyKeyboardMarkup
 from telegram.ext import (CommandHandler, ConversationHandler, Filters,
                           MessageHandler, RegexHandler, Updater)
 
-from quiz_question_operations import get_correct_answer, get_new_question
+from quiz_question_operations import convert_quiz_files_to_dict, get_correct_answer, get_new_question
 
 WAITING, QUESTION_ASKED = range(2)
 
@@ -24,7 +24,7 @@ def start(bot, update):
 
 def handle_new_question_request(bot, update):
     chat_id = update['message']['chat']['id']
-    quiz_question = get_new_question(chat_id, redis_connection)
+    quiz_question = get_new_question(chat_id, redis_connection, quiz_content)
     update.message.reply_text(quiz_question)
     return QUESTION_ASKED
 
@@ -51,7 +51,7 @@ def handle_retreat(bot, update):
     correct_answer = get_correct_answer(chat_id, redis_connection)
     bot.send_message(chat_id=update['message']['chat']['id'],
                      text=f'Правильный ответ:\n{correct_answer}')
-    new_quiz_question = get_new_question(chat_id, redis_connection)
+    new_quiz_question = get_new_question(chat_id, redis_connection, quiz_content)
     update.message.reply_text(f'Новый вопрос:\n{new_quiz_question}')
     return QUESTION_ASKED
 
@@ -68,6 +68,7 @@ if __name__ == '__main__':
         level=logging.ERROR
         )
     load_dotenv()
+    quiz_content = convert_quiz_files_to_dict()
     redis_connection = redis.Redis(
         host=os.environ['DB_HOST'],
         port=os.environ['DB_PORT'],

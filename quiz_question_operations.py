@@ -23,9 +23,8 @@ def convert_quiz_files_to_dict():
     return quiz_content
 
 
-def get_new_question(user_id, connection):
-    question, answer = random.choice(
-        list(convert_quiz_files_to_dict().items()))
+def get_new_question(user_id, connection, content):
+    question, answer = random.choice(list(content.items()))
     connection.set(user_id, answer)
     print(answer)
     return question

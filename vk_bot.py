@@ -10,7 +10,7 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkEventType, VkLongPoll
 from vk_api.utils import get_random_id
 
-from quiz_question_operations import get_correct_answer, get_new_question
+from quiz_question_operations import convert_quiz_files_to_dict, get_correct_answer, get_new_question
 
 
 class TelegramLogsHandler(logging.Handler):
@@ -41,7 +41,7 @@ def send_keybord_to_chat(event, api):
 
 def handle_new_question_request(event, api):
     chat_id = event.user_id
-    quiz_question = get_new_question(chat_id, redis_connection)
+    quiz_question = get_new_question(chat_id, redis_connection, quiz_content)
     api.messages.send(
         user_id=chat_id,
         message=quiz_question,
@@ -76,7 +76,7 @@ def handle_retreat(event, api):
         message=f'Правильный ответ:\n{correct_answer}',
         random_id=get_random_id()
     )
-    new_quiz_question = get_new_question(chat_id, redis_connection)
+    new_quiz_question = get_new_question(chat_id, redis_connection, quiz_content)
     api.messages.send(
         user_id=chat_id,
         message=f'Новый вопрос:\n{new_quiz_question}',
@@ -91,6 +91,7 @@ if __name__ == "__main__":
         level=logging.ERROR
         )
     load_dotenv()
+    quiz_content = convert_quiz_files_to_dict()
     redis_connection = redis.Redis(
         host=os.environ['DB_HOST'],
         port=os.environ['DB_PORT'],
