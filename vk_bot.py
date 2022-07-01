@@ -27,7 +27,7 @@ class TelegramLogsHandler(logging.Handler):
         self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
-def send_keybord_to_chat(event, api):
+def send_keyboard_to_chat(event, api):
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button('Новый вопрос', color=VkKeyboardColor.POSITIVE)
     keyboard.add_button('Сдаться', color=VkKeyboardColor.NEGATIVE)
@@ -118,7 +118,7 @@ if __name__ == "__main__":
             for vk_event in longpoll.listen():
                 if vk_event.type == VkEventType.MESSAGE_NEW and vk_event.to_me:
                     if vk_event.text == '/start':
-                        send_keybord_to_chat(vk_event, vk)
+                        send_keyboard_to_chat(vk_event, vk)
                     elif vk_event.text == 'Новый вопрос':
                         handle_new_question_request(vk_event, vk)
                     elif vk_event.text == 'Сдаться':
