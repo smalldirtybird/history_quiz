@@ -28,7 +28,7 @@ def save_new_question_content_to_database(user_id, connection, content):
     question, answer = random.choice(list(content.items()))
     if '.' in answer or '(' in answer:
         answer, explanation = re.split(
-            '\.| \(', answer, maxsplit=1)
+            r'\.| \(', answer, maxsplit=1)
     question_content = {'question': question, 'answer': answer}
     connection.set(user_id, json.dumps(question_content))
 
