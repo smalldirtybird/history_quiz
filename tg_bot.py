@@ -1,5 +1,6 @@
 import logging
 import os
+from functools import partial
 from textwrap import dedent
 
 import redis
@@ -24,20 +25,20 @@ def start(bot, update):
     return WAITING
 
 
-def handle_new_question_request(bot, update):
+def handle_new_question_request(bot, update, connection, content):
     chat_id = update['message']['chat']['id']
     save_new_question_content_to_database(
-        chat_id, redis_connection, quiz_content)
+        chat_id, connection, content)
     new_quiz_question = get_question_content_from_database(
-        chat_id, redis_connection)['question']
+        chat_id, connection)['question']
     update.message.reply_text(new_quiz_question)
     return QUESTION_ASKED
 
 
-def handle_solution_attempt(bot, update):
+def handle_solution_attempt(bot, update, connection):
     chat_id = update['message']['chat']['id']
     correct_answer = get_question_content_from_database(
-        chat_id, redis_connection)['answer']
+        chat_id, connection)['answer']
     if update.message.text == correct_answer:
         bot.send_message(chat_id=update['message']['chat']['id'],
                          text=dedent(
@@ -52,16 +53,16 @@ def handle_solution_attempt(bot, update):
         return QUESTION_ASKED
 
 
-def handle_retreat(bot, update):
+def handle_retreat(bot, update, connection, content):
     chat_id = update['message']['chat']['id']
     correct_answer = get_question_content_from_database(
-        chat_id, redis_connection)['answer']
+        chat_id, connection)['answer']
     bot.send_message(chat_id=update['message']['chat']['id'],
                      text=f'Правильный ответ:\n{correct_answer}')
     save_new_question_content_to_database(
-        chat_id, redis_connection, quiz_content)
+        chat_id, connection, content)
     new_quiz_question = get_question_content_from_database(
-        chat_id, redis_connection)['question']
+        chat_id, connection)['question']
     update.message.reply_text(f'Новый вопрос:\n{new_quiz_question}')
     return QUESTION_ASKED
 
@@ -71,33 +72,45 @@ def done(bot, update):
     return ConversationHandler.END
 
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig(
         filename='tg_bot.log',
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         level=logging.ERROR
-        )
+    )
     load_dotenv()
     quiz_content = convert_quiz_files_to_dict()
     redis_connection = redis.Redis(
         host=os.environ['DB_HOST'],
         port=os.environ['DB_PORT'],
         password=os.environ['DB_PASSWORD']
-        )
+    )
     updater = Updater(os.environ['TELEGRAM_BOT_TOKEN'])
     dp = updater.dispatcher
+    new_question_request = partial(handle_new_question_request,
+                                   connection=redis_connection,
+                                   content=quiz_content)
+    solution_attempt = partial(handle_solution_attempt,
+                               connection=redis_connection)
+    retreat = partial(handle_retreat,
+                      connection=redis_connection,
+                      content=quiz_content)
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
             WAITING: [RegexHandler('^Новый вопрос$',
-                                   handle_new_question_request)],
-            QUESTION_ASKED: [RegexHandler('^Сдаться$', handle_retreat),
+                                   new_question_request)],
+            QUESTION_ASKED: [RegexHandler('^Сдаться$', retreat),
                              MessageHandler(
-                                 Filters.text, handle_solution_attempt)
+                                 Filters.text, solution_attempt)
                              ]
-            },
+        },
         fallbacks=[RegexHandler('^Done$', done)]
-        )
+    )
     dp.add_handler(conv_handler)
     updater.start_polling()
     updater.idle()
+
+
+if __name__ == '__main__':
+    main()
