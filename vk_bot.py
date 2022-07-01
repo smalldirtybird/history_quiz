@@ -127,6 +127,5 @@ if __name__ == "__main__":
                     else:
                         handle_solution_attempt(vk_event, vk)
         except Exception as error:
-            logging.error(traceback.format_exc())
-            logger.error(
-                f'VK bot crushed with exception:\n{traceback.format_exc()}')
+            logger.exception(
+                f'VK bot crushed with exception:')
