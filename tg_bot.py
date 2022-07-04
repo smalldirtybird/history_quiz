@@ -1,4 +1,6 @@
+import json
 import os
+import random
 from functools import partial
 from textwrap import dedent
 
@@ -9,8 +11,8 @@ from telegram.ext import (CommandHandler, ConversationHandler, Filters,
                           MessageHandler, RegexHandler, Updater)
 
 from quiz_question_operations import (convert_quiz_files_to_dict,
-                                      get_question_content_from_database,
-                                      save_new_question_content_to_database)
+                                      get_clear_answer,
+                                      get_question_content_from_database)
 
 WAITING, QUESTION_ASKED = range(2)
 
@@ -26,11 +28,10 @@ def start(bot, update):
 
 def handle_new_question_request(bot, update, connection, content):
     chat_id = update['message']['chat']['id']
-    save_new_question_content_to_database(
-        chat_id, connection, content)
-    new_quiz_question = get_question_content_from_database(
-        chat_id, connection)['question']
-    update.message.reply_text(new_quiz_question)
+    question, answer = random.choice(list(content.items()))
+    clear_answer = get_clear_answer(answer)
+    connection.set(chat_id, json.dumps({'question': question, 'answer': clear_answer}))
+    update.message.reply_text(question)
     return QUESTION_ASKED
 
 
@@ -58,11 +59,10 @@ def handle_retreat(bot, update, connection, content):
         chat_id, connection)['answer']
     bot.send_message(chat_id=update['message']['chat']['id'],
                      text=f'Правильный ответ:\n{correct_answer}')
-    save_new_question_content_to_database(
-        chat_id, connection, content)
-    new_quiz_question = get_question_content_from_database(
-        chat_id, connection)['question']
-    update.message.reply_text(f'Новый вопрос:\n{new_quiz_question}')
+    question, answer = random.choice(list(content.items()))
+    clear_answer = get_clear_answer(answer)
+    connection.set(chat_id, json.dumps({'question': question, 'answer': clear_answer}))
+    update.message.reply_text(f'Новый вопрос:\n{question}')
     return QUESTION_ASKED
 
 

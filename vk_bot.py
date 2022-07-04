@@ -1,5 +1,7 @@
 import logging
+import json
 import os
+import random
 
 import redis
 import vk_api
@@ -11,7 +13,7 @@ from vk_api.utils import get_random_id
 
 from quiz_question_operations import (convert_quiz_files_to_dict,
                                       get_question_content_from_database,
-                                      save_new_question_content_to_database)
+                                      get_clear_answer)
 
 logger = logging.getLogger('TelegramLogger')
 
@@ -44,13 +46,12 @@ def send_keyboard_to_chat(event, api):
 
 def handle_new_question_request(event, api, connection, content):
     chat_id = event.user_id
-    save_new_question_content_to_database(
-        chat_id, connection, content)
-    new_quiz_question = get_question_content_from_database(
-        chat_id, connection)['question']
+    question, answer = random.choice(list(content.items()))
+    clear_answer = get_clear_answer(answer)
+    connection.set(chat_id, json.dumps({'question': question, 'answer': clear_answer}))
     api.messages.send(
         user_id=chat_id,
-        message=new_quiz_question,
+        message=question,
         random_id=get_random_id()
     )
 
@@ -84,13 +85,12 @@ def handle_retreat(event, api, connection, content):
         message=f'Правильный ответ:\n{correct_answer}',
         random_id=get_random_id()
     )
-    save_new_question_content_to_database(
-        chat_id, connection, content)
-    new_quiz_question = get_question_content_from_database(
-        chat_id, connection)['question']
+    question, answer = random.choice(list(content.items()))
+    clear_answer = get_clear_answer(answer)
+    connection.set(chat_id, json.dumps({'question': question, 'answer': clear_answer}))
     api.messages.send(
         user_id=chat_id,
-        message=f'Новый вопрос:\n{new_quiz_question}',
+        message=f'Новый вопрос:\n{question}',
         random_id=get_random_id()
     )
 

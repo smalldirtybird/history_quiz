@@ -24,13 +24,11 @@ def convert_quiz_files_to_dict():
     return quiz_content
 
 
-def save_new_question_content_to_database(user_id, connection, content):
-    question, answer = random.choice(list(content.items()))
+def get_clear_answer(answer):
     if '.' in answer or '(' in answer:
         answer, explanation = re.split(
             r'\.| \(', answer, maxsplit=1)
-    question_content = {'question': question, 'answer': answer}
-    connection.set(user_id, json.dumps(question_content))
+    return answer
 
 
 def get_question_content_from_database(user_id, connection):
