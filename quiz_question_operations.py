@@ -29,7 +29,3 @@ def get_clear_answer(answer):
         answer, explanation = re.split(
             r'\.| \(', answer, maxsplit=1)
     return answer
-
-
-def get_question_content_from_database(user_id, connection):
-    return json.loads(connection.get(user_id))

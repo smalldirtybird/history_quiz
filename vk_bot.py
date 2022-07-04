@@ -1,5 +1,5 @@
-import logging
 import json
+import logging
 import os
 import random
 
@@ -12,7 +12,6 @@ from vk_api.longpoll import VkEventType, VkLongPoll
 from vk_api.utils import get_random_id
 
 from quiz_question_operations import (convert_quiz_files_to_dict,
-                                      get_question_content_from_database,
                                       get_clear_answer)
 
 logger = logging.getLogger('TelegramLogger')
@@ -48,7 +47,8 @@ def handle_new_question_request(event, api, connection, content):
     chat_id = event.user_id
     question, answer = random.choice(list(content.items()))
     clear_answer = get_clear_answer(answer)
-    connection.set(chat_id, json.dumps({'question': question, 'answer': clear_answer}))
+    connection.set(chat_id, json.dumps(
+        {'question': question, 'answer': clear_answer}))
     api.messages.send(
         user_id=chat_id,
         message=question,
@@ -58,8 +58,7 @@ def handle_new_question_request(event, api, connection, content):
 
 def handle_solution_attempt(event, api, connection):
     chat_id = event.user_id
-    correct_answer = get_question_content_from_database(
-        chat_id, connection)['answer']
+    correct_answer = json.loads(connection.get(chat_id))['answer']
     if event.text == correct_answer:
         api.messages.send(
             user_id=chat_id,
@@ -78,8 +77,7 @@ def handle_solution_attempt(event, api, connection):
 
 def handle_retreat(event, api, connection, content):
     chat_id = event.user_id
-    correct_answer = get_question_content_from_database(
-        chat_id, connection)['answer']
+    correct_answer = json.loads(connection.get(chat_id))['answer']
     api.messages.send(
         user_id=chat_id,
         message=f'Правильный ответ:\n{correct_answer}',
@@ -87,7 +85,8 @@ def handle_retreat(event, api, connection, content):
     )
     question, answer = random.choice(list(content.items()))
     clear_answer = get_clear_answer(answer)
-    connection.set(chat_id, json.dumps({'question': question, 'answer': clear_answer}))
+    connection.set(chat_id, json.dumps(
+        {'question': question, 'answer': clear_answer}))
     api.messages.send(
         user_id=chat_id,
         message=f'Новый вопрос:\n{question}',

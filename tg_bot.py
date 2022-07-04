@@ -11,8 +11,7 @@ from telegram.ext import (CommandHandler, ConversationHandler, Filters,
                           MessageHandler, RegexHandler, Updater)
 
 from quiz_question_operations import (convert_quiz_files_to_dict,
-                                      get_clear_answer,
-                                      get_question_content_from_database)
+                                      get_clear_answer)
 
 WAITING, QUESTION_ASKED = range(2)
 
@@ -30,15 +29,15 @@ def handle_new_question_request(bot, update, connection, content):
     chat_id = update['message']['chat']['id']
     question, answer = random.choice(list(content.items()))
     clear_answer = get_clear_answer(answer)
-    connection.set(chat_id, json.dumps({'question': question, 'answer': clear_answer}))
+    connection.set(chat_id, json.dumps(
+        {'question': question, 'answer': clear_answer}))
     update.message.reply_text(question)
     return QUESTION_ASKED
 
 
 def handle_solution_attempt(bot, update, connection):
     chat_id = update['message']['chat']['id']
-    correct_answer = get_question_content_from_database(
-        chat_id, connection)['answer']
+    correct_answer = json.loads(connection.get(chat_id))['answer']
     if update.message.text == correct_answer:
         bot.send_message(chat_id=update['message']['chat']['id'],
                          text=dedent(
@@ -55,13 +54,13 @@ def handle_solution_attempt(bot, update, connection):
 
 def handle_retreat(bot, update, connection, content):
     chat_id = update['message']['chat']['id']
-    correct_answer = get_question_content_from_database(
-        chat_id, connection)['answer']
+    correct_answer = json.loads(connection.get(chat_id))['answer']
     bot.send_message(chat_id=update['message']['chat']['id'],
                      text=f'Правильный ответ:\n{correct_answer}')
     question, answer = random.choice(list(content.items()))
     clear_answer = get_clear_answer(answer)
-    connection.set(chat_id, json.dumps({'question': question, 'answer': clear_answer}))
+    connection.set(chat_id, json.dumps(
+        {'question': question, 'answer': clear_answer}))
     update.message.reply_text(f'Новый вопрос:\n{question}')
     return QUESTION_ASKED
 
