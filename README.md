@@ -40,7 +40,7 @@ to .env file.
 VK_GROUP_TOKEN = 'yor vk_group_token'
 ```
 
-6. Create database on [Reddislabs](https://redis.com/). 
+6. Create database on [Redislabs](https://redis.com/). 
 7. Add the following lines to .env file:
 ```
 DB_HOST = 'your_database_address'
