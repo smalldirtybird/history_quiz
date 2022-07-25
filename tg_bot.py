@@ -17,7 +17,7 @@ WAITING, QUESTION_ASKED = range(2)
 
 
 def start(bot, update):
-    quiz_keyboard = [['Новый вопрос', 'Сдаться'], ['Мой счёт']]
+    quiz_keyboard = [['Новый вопрос', 'Сдаться']]
     reply_markup = ReplyKeyboardMarkup(quiz_keyboard)
     bot.send_message(chat_id=update['message']['chat']['id'],
                      text='Привет, я бот для викторин!',

@@ -33,8 +33,6 @@ def send_keyboard_to_chat(event, api):
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button('Новый вопрос', color=VkKeyboardColor.POSITIVE)
     keyboard.add_button('Сдаться', color=VkKeyboardColor.NEGATIVE)
-    keyboard.add_line()
-    keyboard.add_button('Мой счёт', color=VkKeyboardColor.PRIMARY)
     api.messages.send(
         peer_id=event.peer_id,
         random_id=get_random_id(),
