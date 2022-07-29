@@ -10,13 +10,14 @@ Send to bot `/start` command to begin a quiz. Then push `Новый вопрос
 Examples of working bots are available at the links in the titles.
 
 ## How to prepare:
-1. Make sure Python installed on your PC - you can get it from [official website](https://www.python.org/).
+1. Make sure Python3.9 installed on your PC - you can get it from [official website](https://www.python.org/).
 
 
 2. Install libraries with pip:
 ```
 pip3 install -r requirements.txt
 ```
+Note: use pip 22.0.2 version with Python 3.9.
 
 
 3. Create a Telegram bot which will talk with users and send mesages about program errors - just send message `/newbot` to [@BotFather](https://telegram.me/BotFather) and follow instructions.
