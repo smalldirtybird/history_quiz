@@ -91,11 +91,14 @@ def main():
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            WAITING: [RegexHandler('^Новый вопрос$',
-                                   new_question_request)],
-            QUESTION_ASKED: [RegexHandler('^Сдаться$', retreat),
-                             MessageHandler(
-                                 Filters.text, solution_attempt)
+            WAITING: [
+                RegexHandler('^Новый вопрос$', new_question_request),
+                CommandHandler('start', start),
+            ],
+            QUESTION_ASKED: [
+                RegexHandler('^Сдаться$', retreat),
+                CommandHandler('start', start),
+                MessageHandler(Filters.text, solution_attempt),
                              ]
         },
         fallbacks=[RegexHandler('^Done$', done)]
