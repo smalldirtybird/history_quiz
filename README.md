@@ -2,12 +2,12 @@
 
 ![](https://psv4.userapi.com/c237031/u328907/docs/d22/c4bf21793985/history_quiz_tg_demo.gif?extra=CEbKQqAqZmNVohHhmNls1nAp4uTMC1lAiushZ12R7bSoIXbqwPjAeb2ekmEjGkEmoHBwNKtMPfF-LajHTTn8yettWE-th-_jZXct_sZfq4U300ytXr9G46hmP_dE85_5nhhRX-KWEJ-Rt5ieEQ)
 
-Automate a history quiz with [Telegram](https://t.me/QuizStoryBot) and [VK](https://vk.com/im?sel=-214235425) bots
+Automate a history quiz with [Telegram](https://t.me/QuizStoryBot) and [VK](https://vk.com/) bots.
 
 ## How it works:
 Send to bot `/start` command to begin a quiz. Then push `Новый вопрос` button for a new question and try the correct answer by typing it in the text input box. If you don't know the answer, click `Сдаться` to get a new question.
 
-Examples of working bots are available at the links in the titles.
+Example of working TG bot is available at the [links](https://t.me/QuizStoryBot).
 
 ## How to prepare:
 1. Make sure Python3.9 installed on your PC - you can get it from [official website](https://www.python.org/).
